@@ -1,4 +1,4 @@
-import { Context, Effect, Layer, Option } from 'effect';
+import { Context, Effect, Option } from 'effect';
 import path from 'node:path';
 import sharp from 'sharp';
 import { ImageNotFoundError, ImageProcessingError } from '../errors';
@@ -10,40 +10,6 @@ export interface IImageProcessorConfig {
   readonly thumbDir: string;
 }
 
-export interface ImageProcessorService {
-  readonly transform: (
-    input: string,
-    output: string,
-    width: number,
-    height: number
-  ) => Effect.Effect<void, ImageProcessingError>;
-
-  readonly getImagePath: (
-    filename: string
-  ) => Effect.Effect<string, ImageNotFoundError>;
-
-  readonly processImage: (
-    filename: string,
-    width: number,
-    height: number
-  ) => Effect.Effect<string, ImageNotFoundError | ImageProcessingError>;
-}
-
-export class ImageProcessor extends Context.Tag('ImageProcessor')<
-  ImageProcessor,
-  ImageProcessorService
->() {
-  static Live = Layer.effect(
-    this,
-    Effect.gen(function* () {
-      const config = yield* ImageProcessorConfig;
-      const fileSystem = yield* FileSystem;
-      const cache = yield* Cache;
-      return ImageProcessor.of(makeImageProcessor(config, fileSystem, cache));
-    })
-  );
-}
-
 export class ImageProcessorConfig extends Context.Tag('ImageProcessorConfig')<
   ImageProcessorConfig,
   IImageProcessorConfig
@@ -51,10 +17,10 @@ export class ImageProcessorConfig extends Context.Tag('ImageProcessorConfig')<
 
 const makeImageProcessor = (
   config: IImageProcessorConfig,
-  fileSystem: FileSystem['Type'],
-  cache: Cache['Type']
-): ImageProcessorService => ({
-  transform: (input, output, width, height) =>
+  fileSystem: typeof FileSystem.Service,
+  cache: typeof Cache.Service,
+) => ({
+  transform: (input: string, output: string, width: number, height: number) =>
     Effect.tryPromise({
       try: () =>
         sharp(input)
@@ -70,7 +36,7 @@ const makeImageProcessor = (
         }),
     }).pipe(Effect.asVoid),
 
-  getImagePath: (filename) =>
+  getImagePath: (filename: string) =>
     Effect.gen(function* () {
       const images = yield* fileSystem
         .readDir(config.fullDir)
@@ -86,41 +52,46 @@ const makeImageProcessor = (
           new ImageNotFoundError({
             filename,
             message: `Image '${filename}' not found in ${config.fullDir}`,
-          })
+          }),
         );
       }
 
       return path.join(config.fullDir, foundImage);
     }),
 
-  processImage: (filename, width, height) =>
+  processImage: (filename: string, width: number, height: number) =>
     Effect.gen(function* () {
       const key = `${filename}-${width}-${height}`;
+      const processor = makeImageProcessor(config, fileSystem, cache);
 
       const cached = yield* cache.get<string>(key);
       if (Option.isSome(cached)) {
         return cached.value;
       }
 
-      const imagePath = yield* makeImageProcessor(
-        config,
-        fileSystem,
-        cache
-      ).getImagePath(filename);
+      const imagePath = yield* processor.getImagePath(filename);
       const { ext } = path.parse(imagePath);
       const thumbPath = path.resolve(`${config.thumbDir}/${key}-thumb${ext}`);
 
       const exists = yield* fileSystem.fileExists(thumbPath);
       if (!exists) {
-        yield* makeImageProcessor(config, fileSystem, cache).transform(
-          imagePath,
-          thumbPath,
-          width,
-          height
-        );
+        yield* processor.transform(imagePath, thumbPath, width, height);
       }
 
       yield* cache.set(key, thumbPath);
       return thumbPath;
     }),
 });
+
+export class ImageProcessor extends Effect.Service<ImageProcessor>()(
+  'ImageProcessor',
+  {
+    effect: Effect.gen(function* () {
+      const config = yield* ImageProcessorConfig;
+      const fileSystem = yield* FileSystem;
+      const cache = yield* Cache;
+      return makeImageProcessor(config, fileSystem, cache);
+    }),
+    dependencies: [FileSystem.Default, Cache.Default],
+  },
+) {}

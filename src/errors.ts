@@ -6,7 +6,7 @@ export class ImageNotFoundError extends Data.TaggedError('ImageNotFoundError')<{
 }> {}
 
 export class ImageProcessingError extends Data.TaggedError(
-  'ImageProcessingError'
+  'ImageProcessingError',
 )<{
   readonly message: string;
   readonly cause?: unknown;

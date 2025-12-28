@@ -14,12 +14,12 @@ const appLayer = makeAppLayer({
 });
 
 const runEffect = <A, E extends AppError>(
-  effect: Effect.Effect<A, E, ImageProcessor>
+  effect: Effect.Effect<A, E, ImageProcessor>,
 ): Promise<Exit.Exit<A, E>> =>
   effect.pipe(Effect.provide(appLayer), Effect.runPromiseExit);
 
 const formatError = (
-  error: AppError
+  error: AppError,
 ): { error: string; message: string; details?: unknown } => {
   switch (error._tag) {
     case 'ValidationError':
@@ -59,7 +59,7 @@ imagesRoute.get('/', async (c) => {
         new ValidationError({
           message: 'Width and height must be positive integers',
           errors: ['width and height must be greater than 0'],
-        })
+        }),
       );
     }
 
@@ -67,7 +67,7 @@ imagesRoute.get('/', async (c) => {
     const imagePath = yield* imageProcessor.processImage(
       input.filename,
       input.width,
-      input.height
+      input.height,
     );
 
     return imagePath;
@@ -88,6 +88,6 @@ imagesRoute.get('/', async (c) => {
 
   return c.json(
     { error: 'InternalError', message: 'An unexpected error occurred' },
-    500
+    500,
   );
 });

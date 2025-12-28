@@ -17,7 +17,7 @@ export const ImageProcessingSchema = z.object({
 export type ImageProcessingInput = z.infer<typeof ImageProcessingSchema>;
 
 export const parseImageProcessingQuery = (
-  query: Record<string, string | undefined>
+  query: Record<string, string | undefined>,
 ): Effect.Effect<ImageProcessingInput, ValidationError> =>
   Effect.try({
     try: () => ImageProcessingSchema.parse(query),
