@@ -1,53 +1,96 @@
 # Image Processing API
 
-This is an Express.js-based API that processes images using the `sharp` library. It allows users to retrieve and transform images by specifying their filename, width, and height.
+A high-performance image processing API built with **Bun**, **Hono**, and **Effect TS** for type-safe, functional error handling and dependency injection.
 
 ## Features
 
-- **Image Processing**: Resize images based on provided width and height.
-- **Caching**: Cache processed images for quicker retrieval.
-- **Error Handling**: Validation of input parameters and error handling for smoother user interaction.
+- **Fast Runtime** - Powered by Bun for exceptional performance
+- **Type-Safe Effects** - Effect TS for functional error handling and DI
+- **Image Processing** - Resize images with Sharp library
+- **Smart Caching** - In-memory caching for processed thumbnails
+- **Clean Architecture** - Service layer pattern with dependency injection
+
+## Tech Stack
+
+| Technology                               | Purpose                   |
+| ---------------------------------------- | ------------------------- |
+| [Bun](https://bun.sh)                    | Runtime & package manager |
+| [Hono](https://hono.dev)                 | Web framework             |
+| [Effect TS](https://effect.website)      | Functional effects & DI   |
+| [Sharp](https://sharp.pixelplumbing.com) | Image processing          |
+| [Zod](https://zod.dev)                   | Schema validation         |
 
 ## Requirements
 
-- Node.js (v14 or higher)
-- `npm` or `yarn`
+- [Bun](https://bun.sh) v1.0+
 
 ## Installation
 
-1. Clone this repository:
-
-   `git clone https://github.com/your-username/image-processing-api.git`
-
-2. Navigate to the project directory:
-
-   `cd image-processing-api`
-
-3. Install dependencies:
-
-   `npm i`
+```bash
+git clone https://github.com/your-username/image-processing-api.git
+cd image-processing-api
+bun install
+```
 
 ## Usage
 
-1. Start the server:
+### Development (with hot reload)
 
-   `npm start`
+```bash
+bun run dev
+```
 
-2. Access the API using the endpoint:
+### Production
 
-   `GET /api/images?filename=image_name&width=desired_width&height=desired_height`
+```bash
+bun run start
+```
 
-   Replace `image_name`, `desired_width`, and `desired_height` with the respective values.
+### API Endpoint
+
+```
+GET /api/images?filename={name}&width={w}&height={h}
+```
+
+**Parameters:**
+
+- `filename` - Image name without extension (e.g., `fjord`)
+- `width` - Target width in pixels
+- `height` - Target height in pixels
+
+**Example:**
+
+```bash
+curl "http://localhost:3000/api/images?filename=fjord&width=200&height=200"
+```
+
+### Health Check
+
+```bash
+curl http://localhost:3000/health
+```
+
+## Project Structure
+
+```
+src/
+├── index.ts            # Bun server entry point
+├── app.ts              # Hono app configuration
+├── errors.ts           # Effect tagged error types
+├── schemas.ts          # Zod validation schemas
+├── routes/
+│   └── images.ts       # Image processing route
+└── services/
+    ├── index.ts        # Service exports & AppLayer
+    ├── FileSystem.ts   # File operations service
+    ├── ImageProcessor.ts # Sharp operations service
+    └── Cache.ts        # In-memory cache service
+```
 
 ## Configuration
 
-- Adjust the `fullDir` and `thumbDir` variables in `index.ts` to match your directory structure.
-- Fine-tune error messages, validations, and caching settings based on your requirements.
-
-## Contributions
-
-Contributions are welcome! If you find any issues or want to enhance the functionality, feel free to open a pull request or create an issue.
+Source images go in `./assets/full/` and thumbnails are cached in `./assets/thumb/`.
 
 ## License
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for more details.
+MIT License. See [LICENSE](LICENSE) for details.

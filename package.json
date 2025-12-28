@@ -1,18 +1,21 @@
 {
   "name": "image-processing-api",
-  "version": "1.0.0",
-  "main": "index.js",
+  "version": "2.0.0",
+  "type": "module",
   "license": "MIT",
   "scripts": {
-    "prettier": "prettier --config .prettierrc src/**/*.ts --write"
+    "dev": "bun run --hot src/index.ts",
+    "start": "bun run src/index.ts",
+    "prettier": "prettier --config .prettierrc src/**/*.ts --write",
+    "typecheck": "bunx --bun tsc --noEmit"
   },
   "dependencies": {
-    "express": "^4.18.2",
-    "sharp": "^0.32.6",
-    "zod": "^3.22.4"
+    "effect": "^3.19.13",
+    "hono": "^4.11.3",
+    "sharp": "^0.34.5",
+    "zod": "^4.2.1"
   },
   "devDependencies": {
-    "@types/express": "^4.17.21",
-    "@types/node": "^20.9.5"
+    "@types/bun": "latest"
   }
 }
